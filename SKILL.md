@@ -64,6 +64,11 @@ Computed styles alone won’t reconstruct timing quality. Capture runtime motion
 - per animation: `duration/delay/fill/iterations/easing` + moved properties (`opacity/transform/color/...`)
 - when possible: full keyframes via `animation.effect.getKeyframes()`
 
+Dynamic page execution order (MUST follow):
+1) Run A2 first and record baseline + triggered snapshots
+2) Run A3 detection next (prove JS-driven/library-driven motion)
+3) If A2 is incomplete, run fallback sampling/trace evidence before writing conclusions
+
 Minimum capture loop:
 1) baseline snapshot
 2) trigger interaction (click/scroll/hover/focus)
@@ -80,12 +85,15 @@ If motion is JS-driven (e.g., Swiper/carousels), `document.getAnimations()` may 
 
 Detect via:
 - DOM/CSS fingerprints (`.swiper-wrapper/.swiper-slide`, `--swiper-theme-color`)
-- asset hints (script/style URLs containing `swiper/gsap/lottie/three`)
-- globals (`window.Swiper`, `window.gsap`, ...)
+- asset hints (script/style URLs containing `swiper/gsap/lottie/three/framer-motion/barba/locomotive-scroll`)
+- globals (`window.Swiper`, `window.gsap`, `window.barba`, `window.LocomotiveScroll`, ...)
 
 Fallback evidence:
-- per-frame sampling (rAF loop ~700–900ms): `transform/opacity/...`
+- per-frame multi-target sampling (rAF loop ~700–900ms): `transform/opacity/filter/clipPath/backgroundColor`
+- use `window.__seMotion.runScenario()` to enforce `baseline -> trigger -> t0/t100/t300/t600` capture chain
 - or a Performance trace
+
+Do not mark motion as “static/no significant motion” until at least one fallback method succeeds or fails with explicit reason.
 
 ### Phase 2 — Semantic tokenization (REQUIRED)
 

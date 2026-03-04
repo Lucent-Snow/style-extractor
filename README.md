@@ -57,6 +57,19 @@ style-extractor/
 
 生成的内容就会在"C:\\Users\\<You>\\style-extractor"这个目录下。
 
+### 2 复杂动效页面推荐指令模板
+
+可直接复制并替换 URL：
+
+```text
+请使用 style-extractor 提取这个站点的风格与动效：https://example.com
+要求必须包含：
+1) 运行时动效证据（document.getAnimations + 至少 3 个关键交互）
+2) JS 动画库检测证据（Swiper/GSAP/Lottie/Three/Framer Motion/Barba/Locomotive）
+3) 若 getAnimations 不完整，必须补充 rAF 多目标采样或 Performance trace
+4) 输出 keyframes、delay chain、组件状态矩阵（default/hover/active/focus/disabled）
+```
+
 ## 参考与质量基准
 
 - `references/endfield-design-system-style.md`：强动效证据写法（推荐优先对齐）
