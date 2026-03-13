@@ -1,73 +1,104 @@
 # style-extractor
 
-从真实网页中提取颜色/字体/间距/组件/状态矩阵，并在网站存在动态效果时，补全运行时动效证据（timing、easing、keyframes、delay chain、JS 驱动动效线索）。
+从真实网页里提取颜色、字体、间距、组件状态和动效证据，最后整理成一套可复用的风格参考文档。
 
-输出为风格指南（Markdown），可选生成 HTML 原型。
+目标不是复刻原站，而是沉淀可复用的视觉语言、交互规则和证据链。
 
-## 效果展示
+## 演示
 
-| 仅图片风格参考 | 使用 Skill 生成文档后参考 |
+| 9-nine | MotherDuck |
 |:--:|:--:|
-| ![before1](image/README/1770372762722.png) | ![after1](image/README/1770372782919.png) |
-| ![before2](image/README/1770372822354.png) | ![after2](image/README/1770372805940.png) |
+| ![9-nine demo](media/nine.gif) | ![MotherDuck demo](media/duck.gif) |
 
-## 目录结构
+## 这是什么
 
-```
-style-extractor/
-├── SKILL.md              # Skill 定义文件（核心）
-├── references/           # 参考样例（质量基准）
-│   ├── endfield-design-system-style.md
-│   └── motherduck-design-system-style.md
-├── scripts/              # 辅助脚本
-│   ├── extract-keyframes.py
-│   ├── library-detect.js
-│   └── motion-tools.js
-└── image/                # README 图片
-```
+这是一个给 AI agent 用的 skill 仓库。
+
+它会让 agent：
+1. 打开真实网页
+2. 截图、抓 computed style、下载 CSS/JS
+3. 在有动效时补运行时证据
+4. 输出风格指南、动效附录和证据清单
 
 ## 依赖
 
-- Node.js（需要能运行 `npx`）
+- Node.js（能运行 `npx`）
 - Chrome（Stable）
-- Codex CLI（或任何支持 MCP 的客户端）
-- **必装：`chrome-devtools-mcp`（Chrome DevTools MCP）**：让 agent 能控制/检查真实 Chrome，抓网络请求、截图、运行脚本、录 trace 等
+- Codex CLI 或其他支持 MCP 的客户端
+- `chrome-devtools-mcp`
+
+`chrome-devtools-mcp` 是必须的，因为这个 skill 的核心能力就是操作真实浏览器、抓网络请求、截图、跑页面内脚本、必要时录 trace。
 
 ## 安装
 
-### 1) 安装 Chrome DevTools MCP（`chrome-devtools-mcp`）
+1. 下载这个仓库
+2. 放到 skills 目录里，推荐放在 `public`
+3. 确认目录下至少有 `SKILL.md`、`references/`、`scripts/`
 
-具体教程不列出
+例如：
 
-### 2) 安装本 Skill
-
-1. 直接从仓库下载 zip（压缩包）
-2. 解压并放到 Codex skills(claude code同理) 目录（推荐 `public`）下，例如：
-   - `C:\\Users\\<You>\\.codex\\skills\\public\\style-extractor\\`
-3. 确认该目录下能看到 `SKILL.md`、`references/`、`scripts/`
+```text
+C:\Users\<You>\.codex\skills\public\style-extractor\
+```
 
 ## 使用
 
-### 1 在 Codex(cc) 里这样下指令
+直接在 Codex / Claude Code 里下类似这样的指令：
 
-"帮我提取xx(网页链接)的风格"。
-如果没有反应，可以尝试指定 style-extractor 这个 skill 名，客户端便会自己开始行动
+```text
+帮我提取这个网页的风格：https://example.com
+```
 
-（提示：`chrome-devtools-mcp` 通常会在首次调用需要浏览器的工具时自动启动/连接 Chrome。）
+如果客户端没有自动命中，可以明确点名 `style-extractor`。
 
-生成的内容就会在"C:\\Users\\<You>\\style-extractor"这个目录下。
+生成结果统一写到：
 
-## 参考与质量基准
+```text
+%USERPROFILE%\style-extractor\<project>-<style>\
+  guides\
+    style-guide.md
+    motion-guide.md
+    evidence-manifest.md
+  evidence\
+    screenshots\
+    assets\
+    notes\
+```
 
-- `references/endfield-design-system-style.md`：强动效证据写法（推荐优先对齐）
-- `references/motherduck-design-system-style.md`：静态结构与表达方式参考
+其中：
+- `style-guide.md` 必有
+- `evidence-manifest.md` 必有
+- `motion-guide.md` 只在站点动效有意义时必有
 
-## 小提示（模型差异：经验之谈）
+## 参考内容
 
-- 实测：**Codex 往往更"勤快"**，更愿意把动效证据抓全（例如 `document.getAnimations()`、采样、trace）。
-- 实测：**Claude 往往审美更好**，但可能会"偷懒"跳过动效证据；建议你明确要求"必须输出动效证据 + keyframes + delay chain"，并让它按 `endfield` 参考格式交付。
+`references/` 里有三类东西：
+- 输出契约：`output-contract.md`
+- 文档模板：`style-guide-template.md`、`motion-guide-template.md`、`evidence-manifest-template.md`
+- 参考包：`9nine-visual-novel/`、`motherduck-design-system-reference/`
 
+做任何提取前，必须先读：
+1. `references/output-contract.md`
+2. 三个模板文件
+3. `references/9nine-visual-novel/guides/` 下全部文档
+4. `references/motherduck-design-system-reference/guides/` 下全部文档
 
-## 下一步计划
+不读完这一步，不应该开始抓证据或写最终文档。
 
-- 增加对 JS 动画的适配
+## 原则
+
+- 提取风格，不复制产品信息架构
+- 输出必须带证据链，不能只写感觉
+- 静态风格和动效分层交付
+- 最终文档要能复用，不要写成产品拆解报告
+
+## 仓库结构
+
+```text
+style-extractor/
+├── README.md
+├── SKILL.md
+├── media/
+├── references/
+└── scripts/
+```
